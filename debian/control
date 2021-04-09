@@ -1,0 +1,12 @@
+Source: ros-melodic-clover
+Section: misc
+Priority: optional
+Maintainer: Oleg Kalachev <okalachev@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), libgeographic-dev, python-lxml, ros-melodic-catkin, ros-melodic-catkin-virtualenv, ros-melodic-cv-bridge, ros-melodic-cv-camera, ros-melodic-geometry-msgs, ros-melodic-led-msgs, ros-melodic-mavros, ros-melodic-mavros-extras, ros-melodic-message-generation, ros-melodic-nodelet, ros-melodic-rosbridge-server, ros-melodic-roscpp, ros-melodic-rospy, ros-melodic-sensor-msgs, ros-melodic-std-msgs, ros-melodic-std-srvs, ros-melodic-tf, ros-melodic-tf2, ros-melodic-tf2-geometry-msgs, ros-melodic-tf2-ros, ros-melodic-tf2-web-republisher, ros-melodic-visualization-msgs, ros-melodic-web-video-server
+Homepage: https://clover.coex.tech/
+Standards-Version: 3.9.2
+
+Package: ros-melodic-clover
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libgeographic-dev, python-lxml, ros-melodic-cv-bridge, ros-melodic-cv-camera, ros-melodic-geometry-msgs, ros-melodic-led-msgs, ros-melodic-mavros, ros-melodic-mavros-extras, ros-melodic-message-generation, ros-melodic-nodelet, ros-melodic-rosbridge-server, ros-melodic-roscpp, ros-melodic-rospy, ros-melodic-sensor-msgs, ros-melodic-std-msgs, ros-melodic-std-srvs, ros-melodic-tf, ros-melodic-tf2, ros-melodic-tf2-geometry-msgs, ros-melodic-tf2-ros, ros-melodic-tf2-web-republisher, ros-melodic-visualization-msgs, ros-melodic-web-video-server
+Description: The Clover package
