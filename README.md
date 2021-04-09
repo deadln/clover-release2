@@ -1,42 +1,82 @@
-# clover🍀: create autonomous drones easily
+# `clover_simulation` ROS package
 
-<img src="docs/assets/clover42-main.png" align="right" width="400px" alt="COEX Clover Drone">
+This package provides resources necessary for launching Gazebo simulation with Clover, along with `.launch` files for convenience.
 
-Clover is an open source [ROS](https://www.ros.org)-based framework, providing user-friendly tools to control [PX4](https://px4.io)-powered drones. Clover is available as a ROS package, but is shipped mainly as a preconfigured image for Raspberry Pi. Once you've installed Raspberry Pi on your drone and flashed the image to its microSD card, taking the drone up in the air is a matter of minutes.
+## Launching the simulation
 
-COEX Clover Drone is an educational programmable drone kit, suited perfectly for running clover software. The kit is shipped unassembled and includes Pixracer-compatible autopilot running PX4 firmware, Raspberry Pi 4 as a companion computer, a camera for computer vision navigation as well as additional sensors and peripheral devices. Batteries included.
+Simulation is launched by [`simulator.launch` file](launch/simulator.launch). This `.launch` file assumes that `px4` and `sitl_gazebo` packages are reachable from your current workspace.
 
-The main documentation is available at [https://clover.coex.tech](https://clover.coex.tech/). Official website: [coex.tech/clover](https://coex.tech/clover).
+The simulation may be configured by a set of arguments:
 
-[__Support us on Kickstarter!__](https://www.kickstarter.com/projects/copterexpress/cloverdrone)
+* `mav_id` (*integer*, default: *0*) - MAVLink identifier of the vehicle. **Note**: Multi-vehicle simulation is possible, but requires extensive changes to launch files;
+* `est` (*string*, default: *lpe*, possible values: *lpe*, *ekf2*) - PX4 estimator selection. Note that this may be overriden in the startup scripts for your craft;
+* `vehicle` (*string*, default: *clover*) - PX4 vehicle name. Depending on this parameter, different PX4 presets will be loaded. **Note**: The default value, *clover*, requires you to use [Clover-specific PX4 branch](https://github.com/CopterExpress/Firmware/tree/v1.10.1-clever);
+* `main_camera` (*boolean*, default: *true*) - controls whether the drone will have a vision position estimation camera;
+* `rangefinder` (*boolean*, default: *true*) - controls whether the drone will have a laser rangefinder;
+* `led` (*boolean*, default: *true*) - controls whether the drone will have a programmable LED strip;
+* `gps` (*boolean*, default: *true*) - controls whether the drone will have a simulated GPS module;
 
-## Video compilation
+In order to start the simulation, run:
 
-[![Clover Drone Kit autonomy compilation](http://img.youtube.com/vi/u3omgsYC4Fk/hqdefault.jpg)](https://youtu.be/u3omgsYC4Fk)
+```bash
+roslaunch clover_simulation simulator.launch
+```
 
-Clover drone is used on a wide range of educational events, including [Copter Hack](https://www.youtube.com/watch?v=xgXheg3TTs4), WorldSkills Drone Operation competition, [Autonomous Vehicles Track of NTI Olympics 2016–2020](https://www.youtube.com/watch?v=E1_ehvJRKxg), Quadro Hack 2019 (National University of Science and Technology MISiS), Russian Robot Olympiad (autonomous flights), and others.
+This will start a new Gazebo instance (using `gazebo_ros` package), load a PX4 SITL instance, spawn a Clover model and start Clover ROS nodes. The PX4 console will be accessible in the terminal where `roslaunch` was performed.
 
-## Raspberry Pi image
+### Changing simulation speed (PX4 1.9+)
 
-Preconfigured image for Raspberry Pi with installed and configured software, ready to fly, is available [in the Releases section](https://github.com/CopterExpress/clover/releases).
+In order to run simulation faster or slower than realtime, use the `PX4_SIM_SPEED_FACTOR` environment variable, [as stated in the PX4 docs](https://dev.px4.io/v1.9.0/en/simulation/#simulation_speed).
 
-[![Build Status](https://travis-ci.org/CopterExpress/clover.svg?branch=master)](https://travis-ci.org/CopterExpress/clover)
+If `PX4_SIM_SPEED_FACTOR` is not set, it is assumed that it is equal to 1.0.
 
-Image features:
+Note that Gazebo may slow the simulation down automatically. This may not be handled gracefully, so if you notice Gazebo's "Real Time Factor" being significantly lower than your `PX4_SIM_SPEED_FACTOR`, be sure to adjust it accordingly.
 
-* Raspbian Buster
-* [ROS Melodic](http://wiki.ros.org/melodic)
-* Configured networking
-* OpenCV
-* [`mavros`](http://wiki.ros.org/mavros)
-* Periphery drivers for ROS ([GPIO](https://clover.coex.tech/en/gpio.html), [LED strip](https://clover.coex.tech/en/leds.html), etc)
-* `aruco_pose` package for marker-assisted navigation
-* `clover` package for autonomous drone control
+### Changing initial world
 
-API description for autonomous flights is available [on GitBook](https://clover.coex.tech/en/simple_offboard.html).
+By default, the `simulator.launch` file will start the simulation with [`resources/worlds/clover.world`](resources/worlds/clover.world) as its base world. Note that the `real_time_update_rate` is set to 250 - this is required for PX4 lockstep simulation to work correctly.
 
-For manual package installation and running see [`clover` package documentation](clover/README.md).
+If you wish to create your own world for the simulation, be sure to derive it from `clover.world` to avoid issues with PX4 plugins.
 
-## License
+You may set the world name in `simulator.launch` as the `world_name` parameter for `gazebo_ros` instance.
 
-While the Clover platform source code is available under the MIT License, note, that the [documentation](docs/) is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+### Configuring the vehicle
+
+`simulator.launch` utilizes the same `clover.launch` file from the `clover` ROS package, so ROS node reconfiguration is the same as on the real drone.
+
+PX4 may be reconfigured using QGroundControl, just like a real drone. Some parameters may require rebooting the drone, which is performed by shutting the simulated environment down and restarting it.
+
+PX4 will write its parameters and logs to `${ROS_HOME}/eeprom/parameters` and `${ROS_HOME}/log`, respectively. Note that the log directory naming schema for PX4 logs is different from ROS: PX4 creates log directories based on the current date, which makes them relatively simple to find.
+
+## LED plugin (sim_leds)
+
+A visual Gazebo plugin is used for the LED strip. An example of the plugin usage is provided in [`led_strip.xacro`](../clover_description/urdf/leds/led_strip.xacro).
+
+The plugin accepts the following parameters during instantiation:
+
+* `robotNamespace` (*string*, default: "") - a ROS namespace for the plugin;
+* `ledCount` (*integer*, required) - total numer of LEDs in a strip.
+
+The plugin will provide the following service:
+
+`led/set_leds` ([*led_msgs/SetLEDs*](https://github.com/CopterExpress/ros_led/blob/v0.0.6/led_msgs/srv/SetLEDs.srv)) - set the LED colors to the provided values.
+
+The plugin will provide the following topics:
+
+`led/state` ([*led_msgs/LEDStateArray*](https://github.com/CopterExpress/ros_led/blob/v0.0.6/led_msgs/msg/LEDStateArray.msg)) - current LED strip state.
+
+Other nodes are not expected to write to `led/state` topic.
+
+All provided topics and services will be namespaced according to the `robotNamespace` parameter.
+
+## Throttling camera plugin (throttling_camera)
+
+By default, Gazebo camera sensors will use their `update_rate` parameter as an upper bound for the actual rate. This may result in much lower rates than expected. This may be fine for object recognition tasks where the camera is not the primary positioning sensor, but is not desirable in our case, when the camera is used for position calculation.
+
+We provide a Gazebo-ROS plugin for the camera sensor that will throttle down the simulation to maintain update rate. The plugin API is based on the `gazebo_ros_camera` plugin, and respects the following parameters in SDF:
+
+* `<minUpdateRate>` (*double*, default: same as `<updateRate>`) - least allowed publish/update rate for the camera (in Hz);
+* `<windowSize>` (*integer*, default: 10) - number of last update intervals that are considered for throttling;
+* `<maxStDev>` (*double*, default: 0.02) - maximum standard deviation value for update intervals.
+
+The simulation will be slowed down if the average update rate (averaged over `<windowSize>` samples) is lower than `<minUpdateRate>` and is consistent (standard deviation over `<windowSize>` samples is less than `<maxStDev>`).
