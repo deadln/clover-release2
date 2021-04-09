@@ -1,0 +1,12 @@
+Source: ros-melodic-aruco-pose
+Section: misc
+Priority: optional
+Maintainer: Oleg Kalachev <okalachev@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-cv-bridge, ros-melodic-dynamic-reconfigure, ros-melodic-geometry-msgs, ros-melodic-image-publisher, ros-melodic-image-transport, ros-melodic-message-generation, ros-melodic-message-runtime, ros-melodic-nodelet, ros-melodic-ros-pytest, ros-melodic-roscpp, ros-melodic-rostest, ros-melodic-sensor-msgs, ros-melodic-std-msgs, ros-melodic-tf, ros-melodic-tf2, ros-melodic-tf2-geometry-msgs, ros-melodic-tf2-ros, ros-melodic-visualization-msgs
+Homepage: 
+Standards-Version: 3.9.2
+
+Package: ros-melodic-aruco-pose
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-cv-bridge, ros-melodic-dynamic-reconfigure, ros-melodic-geometry-msgs, ros-melodic-image-transport, ros-melodic-message-generation, ros-melodic-message-runtime, ros-melodic-nodelet, ros-melodic-roscpp, ros-melodic-rostest, ros-melodic-sensor-msgs, ros-melodic-std-msgs, ros-melodic-tf, ros-melodic-tf2, ros-melodic-tf2-geometry-msgs, ros-melodic-tf2-ros, ros-melodic-visualization-msgs
+Description: Positioning with ArUco markers
