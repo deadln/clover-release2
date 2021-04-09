@@ -1,42 +1,120 @@
-# clover🍀: create autonomous drones easily
+# Positioning with ArUco markers
 
-<img src="docs/assets/clover42-main.png" align="right" width="400px" alt="COEX Clover Drone">
+`aruco_pose` package consists of two nodelets: `aruco_detect` detects individual ArUco-markers and estimates their poses, `aruco_map` detects maps of markers using `aruco_detect` output.
 
-Clover is an open source [ROS](https://www.ros.org)-based framework, providing user-friendly tools to control [PX4](https://px4.io)-powered drones. Clover is available as a ROS package, but is shipped mainly as a preconfigured image for Raspberry Pi. Once you've installed Raspberry Pi on your drone and flashed the image to its microSD card, taking the drone up in the air is a matter of minutes.
+## Quick start
 
-COEX Clover Drone is an educational programmable drone kit, suited perfectly for running clover software. The kit is shipped unassembled and includes Pixracer-compatible autopilot running PX4 firmware, Raspberry Pi 4 as a companion computer, a camera for computer vision navigation as well as additional sensors and peripheral devices. Batteries included.
+To run a camera nodelet, markers and maps detector:
 
-The main documentation is available at [https://clover.coex.tech](https://clover.coex.tech/). Official website: [coex.tech/clover](https://coex.tech/clover).
+```bash
+roslaunch aruco_pose sample.launch
+```
 
-[__Support us on Kickstarter!__](https://www.kickstarter.com/projects/copterexpress/cloverdrone)
+You're going to need [`cv_camera`](http://wiki.ros.org/cv_camera) package installed.
 
-## Video compilation
+## aruco_detect nodelet
 
-[![Clover Drone Kit autonomy compilation](http://img.youtube.com/vi/u3omgsYC4Fk/hqdefault.jpg)](https://youtu.be/u3omgsYC4Fk)
+`aruco_detect` detects ArUco markers on the image, publishes list of them (with poses), TF transformations, visualization markers and processed image for debugging.
 
-Clover drone is used on a wide range of educational events, including [Copter Hack](https://www.youtube.com/watch?v=xgXheg3TTs4), WorldSkills Drone Operation competition, [Autonomous Vehicles Track of NTI Olympics 2016–2020](https://www.youtube.com/watch?v=E1_ehvJRKxg), Quadro Hack 2019 (National University of Science and Technology MISiS), Russian Robot Olympiad (autonomous flights), and others.
+It's recommended to run it within the same nodelet manager with the camera nodelet (e. g. [`cv_camera`](http://wiki.ros.org/cv_camera)).
 
-## Raspberry Pi image
+### Parameters
 
-Preconfigured image for Raspberry Pi with installed and configured software, ready to fly, is available [in the Releases section](https://github.com/CopterExpress/clover/releases).
+* `~dictionary` (*int*) – ArUco dictionary (default: 2)
+  * 0 = DICT_4X4_50
+  * 1 = DICT_4X4_100,
+  * 2 = DICT_4X4_250,
+  * 3 = DICT_4X4_1000,
+  * 4 = DICT_5X5_50,
+  * 5 = DICT_5X5_100,
+  * 6 = DICT_5X5_250,
+  * 7 = DICT_5X5_1000,
+  * 8 = DICT_6X6_50,
+  * 9 = DICT_6X6_100,
+  * 10 = DICT_6X6_250,
+  * 11 = DICT_6X6_1000,
+  * 12 = DICT_7X7_50,
+  * 13 = DICT_7X7_100,
+  * 14 = DICT_7X7_250,
+  * 15 = DICT_7X7_1000,
+  * 16 = DICT_ARUCO_ORIGINAL
+* `~estimate_poses` (*bool*) – estimate single markers' poses (default: true)
+* `~send_tf` (*bool*) – send TF transforms (default: true)
+* `~frame_id_prefix` (*string*) – prefix for TF transforms names, marker's ID is appended (default: `aruco_`)
+* `~length` (*double*) – markers' sides length
+* `~length_override` (*map*) – lengths of markers with specified ids
+* `~known_tilt` (*string*) – known tilt (pitch and roll) of all the markers as a frame
 
-[![Build Status](https://travis-ci.org/CopterExpress/clover.svg?branch=master)](https://travis-ci.org/CopterExpress/clover)
+### Topics
 
-Image features:
+#### Subscribed
 
-* Raspbian Buster
-* [ROS Melodic](http://wiki.ros.org/melodic)
-* Configured networking
-* OpenCV
-* [`mavros`](http://wiki.ros.org/mavros)
-* Periphery drivers for ROS ([GPIO](https://clover.coex.tech/en/gpio.html), [LED strip](https://clover.coex.tech/en/leds.html), etc)
-* `aruco_pose` package for marker-assisted navigation
-* `clover` package for autonomous drone control
+* `image_raw` (*sensor_msgs/Image*) – camera image
+* `camera_info` (*sensor_msgs/CameraInfo*) – camera calibration info
 
-API description for autonomous flights is available [on GitBook](https://clover.coex.tech/en/simple_offboard.html).
+#### Published
 
-For manual package installation and running see [`clover` package documentation](clover/README.md).
+* `~markers` (*aruco_pose/MarkerArray*) – list of detected markers with their corners and poses
+* `~visualization` (*visualization_msgs/MarkerArray*) – visualization markers for rviz
+* `~debug` (*sensor_msgs/Image*) – debug image with detected markers
 
-## License
+### Published transforms
 
-While the Clover platform source code is available under the MIT License, note, that the [documentation](docs/) is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+* `<camera_frame>` => `<frame_id_prefix><id>` – markers' poses
+
+## aruco_map nodelet
+
+`aruco_map` nodelet estimates position of markers map.
+
+### Parameters
+
+* `~map` – path to text file with markers list
+* `~frame_id` – published frame id (default: `aruco_map`)
+* `~known_tilt` – debug image width
+* `~image_width` – debug image width (default: 2000)
+* `~image_height` – debug image height (default: 2000)
+* `~image_margin` – debug image margin (default: 200)
+* `~dictionary` (*int*) – ArUco dictionary (default: 2) - should be the same as `dictionary` parameter of `aruco_detect` nodelet
+
+Map file has one marker per line with the following line format:
+
+```
+marker_id marker_length x y z yaw pitch roll
+```
+
+Where yaw, pitch and roll are extrinsic rotation around Z, Y, X axis, respectively.
+
+See examples in [`map`](map/) directory.
+
+### Topics
+
+#### Subscribed
+
+* `image_raw` (*sensor_msgs/Image*) – camera image (used for debug image)
+* `camera_info` (*sensor_msgs/CameraInfo*) – camera calibration info (used for debug image)
+* `markers` (*aruco_pose/MarkerArray*) – list of markers detected by `aruco_pose` nodelet
+
+#### Published
+
+* `~pose` (*geometry_msgs/PoseWithCovarianceStamped*) – estimated map pose
+* `~image` (*sensor_msgs/Image*) – planarized map image
+* `~visualization` (*visualization_msgs/MarkerArray*) – markers map visualization for rviz
+* `~debug` (*sensor_msgs/Image*) – debug image with detected markers and map axis
+
+### Published transforms
+
+* `<camera_frame>` => `<map_name>` – markers map pose
+
+## Running tests
+
+Command for running tests:
+
+```bash
+catkin_make run_tests && catkin_test_results
+```
+
+## Copyright
+
+Copyright © 2018 Copter Express Technologies. Author: Oleg Kalachev.
+
+Distributed under MIT License (https://opensource.org/licenses/MIT).
