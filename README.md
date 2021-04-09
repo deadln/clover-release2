@@ -1,42 +1,55 @@
-# clover🍀: create autonomous drones easily
+# `clover` ROS package
 
-<img src="docs/assets/clover42-main.png" align="right" width="400px" alt="COEX Clover Drone">
+A bundle for autonomous navigation and drone control.
 
-Clover is an open source [ROS](https://www.ros.org)-based framework, providing user-friendly tools to control [PX4](https://px4.io)-powered drones. Clover is available as a ROS package, but is shipped mainly as a preconfigured image for Raspberry Pi. Once you've installed Raspberry Pi on your drone and flashed the image to its microSD card, taking the drone up in the air is a matter of minutes.
+## Manual installation
 
-COEX Clover Drone is an educational programmable drone kit, suited perfectly for running clover software. The kit is shipped unassembled and includes Pixracer-compatible autopilot running PX4 firmware, Raspberry Pi 4 as a companion computer, a camera for computer vision navigation as well as additional sensors and peripheral devices. Batteries included.
+Install ROS Melodic according to the [documentation](http://wiki.ros.org/melodic/Installation), then [create a Catkin workspace](http://wiki.ros.org/catkin/Tutorials/create_a_workspace).
 
-The main documentation is available at [https://clover.coex.tech](https://clover.coex.tech/). Official website: [coex.tech/clover](https://coex.tech/clover).
+Clone this repo to directory `~/catkin_ws/src/clover`:
 
-[__Support us on Kickstarter!__](https://www.kickstarter.com/projects/copterexpress/cloverdrone)
+```bash
+cd ~/catkin_ws/src
+git clone https://github.com/CopterExpress/clover.git clover
+```
 
-## Video compilation
+All the required ROS packages (including `mavros` and `opencv`) can be installed using `rosdep`:
 
-[![Clover Drone Kit autonomy compilation](http://img.youtube.com/vi/u3omgsYC4Fk/hqdefault.jpg)](https://youtu.be/u3omgsYC4Fk)
+```bash
+cd ~/catkin_ws/
+rosdep install -y --from-paths src --ignore-src
+```
 
-Clover drone is used on a wide range of educational events, including [Copter Hack](https://www.youtube.com/watch?v=xgXheg3TTs4), WorldSkills Drone Operation competition, [Autonomous Vehicles Track of NTI Olympics 2016–2020](https://www.youtube.com/watch?v=E1_ehvJRKxg), Quadro Hack 2019 (National University of Science and Technology MISiS), Russian Robot Olympiad (autonomous flights), and others.
+Build ROS packages (on memory constrained platforms you might be going to need to use `-j1` key):
 
-## Raspberry Pi image
+```bash
+cd ~/catkin_ws
+catkin_make -j1
+```
 
-Preconfigured image for Raspberry Pi with installed and configured software, ready to fly, is available [in the Releases section](https://github.com/CopterExpress/clover/releases).
+To complete `mavros` install you'll need to install `geographiclib` datasets:
 
-[![Build Status](https://travis-ci.org/CopterExpress/clover.svg?branch=master)](https://travis-ci.org/CopterExpress/clover)
+```bash
+curl https://raw.githubusercontent.com/mavlink/mavros/master/mavros/scripts/install_geographiclib_datasets.sh | sudo bash
+```
 
-Image features:
+You may optionally install udev rules to provide `/dev/px4fmu` symlink to your PX4-based flight controller connected over USB. Copy `99-px4fmu.rules` to your `/lib/udev/rules.d` folder:
 
-* Raspbian Buster
-* [ROS Melodic](http://wiki.ros.org/melodic)
-* Configured networking
-* OpenCV
-* [`mavros`](http://wiki.ros.org/mavros)
-* Periphery drivers for ROS ([GPIO](https://clover.coex.tech/en/gpio.html), [LED strip](https://clover.coex.tech/en/leds.html), etc)
-* `aruco_pose` package for marker-assisted navigation
-* `clover` package for autonomous drone control
+```bash
+cd ~/catkin_ws/src/clover/clover/config
+sudo cp 99-px4fmu.rules /lib/udev/rules.d
+```
 
-API description for autonomous flights is available [on GitBook](https://clover.coex.tech/en/simple_offboard.html).
+Alternatively you may change the `fcu_url` property in `mavros.launch` file to point to your flight controller device.
 
-For manual package installation and running see [`clover` package documentation](clover/README.md).
+## Running
 
-## License
+To start connection to the flight controller, use:
 
-While the Clover platform source code is available under the MIT License, note, that the [documentation](docs/) is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+```bash
+roslaunch clover clover.launch
+```
+
+For the simulation information see the [corresponding article](https://clover.coex.tech/en/simulation.html).
+
+> Note that the package is configured to connect to `/dev/px4fmu` by default (see [previous section](#manual-installation)). Install udev rules or specify path to your FCU device in `mavros.launch`.
