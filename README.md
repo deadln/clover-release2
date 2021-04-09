@@ -1,42 +1,29 @@
-# clover🍀: create autonomous drones easily
+# `clover_description` ROS package
 
-<img src="docs/assets/clover42-main.png" align="right" width="400px" alt="COEX Clover Drone">
+This package contains models and URDF descriptions for the Clover 4 drone. These descriptions can be used for Gazebo simulation environment.
 
-Clover is an open source [ROS](https://www.ros.org)-based framework, providing user-friendly tools to control [PX4](https://px4.io)-powered drones. Clover is available as a ROS package, but is shipped mainly as a preconfigured image for Raspberry Pi. Once you've installed Raspberry Pi on your drone and flashed the image to its microSD card, taking the drone up in the air is a matter of minutes.
+Note that in order to use these descriptions in Gazebo, you need to use the plugins from [PX4 `sitl_gazebo` package](https://github.com/PX4/sitl_gazebo) and `clover_simulation` package.
 
-COEX Clover Drone is an educational programmable drone kit, suited perfectly for running clover software. The kit is shipped unassembled and includes Pixracer-compatible autopilot running PX4 firmware, Raspberry Pi 4 as a companion computer, a camera for computer vision navigation as well as additional sensors and peripheral devices. Batteries included.
+## Usage
 
-The main documentation is available at [https://clover.coex.tech](https://clover.coex.tech/). Official website: [coex.tech/clover](https://coex.tech/clover).
+The descriptions are provided as [`xacro`-enabled](https://wiki.ros.org/xacro) URDF files. A [`spawn_drone.launch`](launch/spawn_drone.launch) file that spawns the model in a running Gazebo instance is also provided for convenience.
 
-[__Support us on Kickstarter!__](https://www.kickstarter.com/projects/copterexpress/cloverdrone)
+You may provide additional parameters for `spawn_drone.launch` as well:
 
-## Video compilation
+* `main_camera` (*boolean*, default: *true*) - controls whether the drone will have a downward-facing camera attached;
+* `rangefinder` (*boolean*, default: *true*) - controls whether the drone will have a downward-facing laser rangefinder attached;
+* `led` (*boolean*, default: *true*) - controls whether the drone will have a programmable LED strip (requires plugins from `clover_simulation`);
+* `gps` (*boolean*, default: *true*) - controls whether the drone will have a simulated GPS attached (requires plugins from `sitl_gazebo`);
+* `maintain_camera_rate` (*boolean*, default: *false*) - slow down the simultion to maintain camera publishing rate (internally changes the camera plugin from `libgazebo_ros_camera.so` to `libthrottling_camera.so` from [`clover_simulation`](../clover_simulation/README.md#throttling-camera-plugin-throttling_camera)).
 
-[![Clover Drone Kit autonomy compilation](http://img.youtube.com/vi/u3omgsYC4Fk/hqdefault.jpg)](https://youtu.be/u3omgsYC4Fk)
+For example, in order to spawn a drone without a GPS module, you may use the following command:
 
-Clover drone is used on a wide range of educational events, including [Copter Hack](https://www.youtube.com/watch?v=xgXheg3TTs4), WorldSkills Drone Operation competition, [Autonomous Vehicles Track of NTI Olympics 2016–2020](https://www.youtube.com/watch?v=E1_ehvJRKxg), Quadro Hack 2019 (National University of Science and Technology MISiS), Russian Robot Olympiad (autonomous flights), and others.
+```bash
+roslaunch clover_description spawn_drone.launch gps:=false
+```
 
-## Raspberry Pi image
+## Tweaking
 
-Preconfigured image for Raspberry Pi with installed and configured software, ready to fly, is available [in the Releases section](https://github.com/CopterExpress/clover/releases).
+By default, the `spawn_drone.launch` command will use the [`clover4.xacro` description file](urdf/clover/clover4.xacro). This is a "high-level" description of the drone, mainly used to attach additional sensors.
 
-[![Build Status](https://travis-ci.org/CopterExpress/clover.svg?branch=master)](https://travis-ci.org/CopterExpress/clover)
-
-Image features:
-
-* Raspbian Buster
-* [ROS Melodic](http://wiki.ros.org/melodic)
-* Configured networking
-* OpenCV
-* [`mavros`](http://wiki.ros.org/mavros)
-* Periphery drivers for ROS ([GPIO](https://clover.coex.tech/en/gpio.html), [LED strip](https://clover.coex.tech/en/leds.html), etc)
-* `aruco_pose` package for marker-assisted navigation
-* `clover` package for autonomous drone control
-
-API description for autonomous flights is available [on GitBook](https://clover.coex.tech/en/simple_offboard.html).
-
-For manual package installation and running see [`clover` package documentation](clover/README.md).
-
-## License
-
-While the Clover platform source code is available under the MIT License, note, that the [documentation](docs/) is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+The drone "physics" may be tweaked by changing the [`clover4_physics.xacro` file](urdf/clover/clover4_physics.xacro).
