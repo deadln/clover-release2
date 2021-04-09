@@ -1,42 +1,54 @@
-# clover🍀: create autonomous drones easily
+# clover_blocks
 
-<img src="docs/assets/clover42-main.png" align="right" width="400px" alt="COEX Clover Drone">
+Blockly programming support for Clover.
 
-Clover is an open source [ROS](https://www.ros.org)-based framework, providing user-friendly tools to control [PX4](https://px4.io)-powered drones. Clover is available as a ROS package, but is shipped mainly as a preconfigured image for Raspberry Pi. Once you've installed Raspberry Pi on your drone and flashed the image to its microSD card, taking the drone up in the air is a matter of minutes.
+<img src="screenshot.png" width=700>
 
-COEX Clover Drone is an educational programmable drone kit, suited perfectly for running clover software. The kit is shipped unassembled and includes Pixracer-compatible autopilot running PX4 firmware, Raspberry Pi 4 as a companion computer, a camera for computer vision navigation as well as additional sensors and peripheral devices. Batteries included.
+See user documentation at the [main Clover documentation site](https://clover.coex.tech/en/blocks.html).
 
-The main documentation is available at [https://clover.coex.tech](https://clover.coex.tech/). Official website: [coex.tech/clover](https://coex.tech/clover).
+Internal package documentation is given below.
 
-[__Support us on Kickstarter!__](https://www.kickstarter.com/projects/copterexpress/cloverdrone)
+## Frontend
 
-## Video compilation
+The frontend files are located in [`www`](./www/) subdirectory. The frontend application uses [`roblib.js`](http://wiki.ros.org/roslibjs) library for communicating with backend node and other ROS resources.
 
-[![Clover Drone Kit autonomy compilation](http://img.youtube.com/vi/u3omgsYC4Fk/hqdefault.jpg)](https://youtu.be/u3omgsYC4Fk)
+## `clover_blocks` node
 
-Clover drone is used on a wide range of educational events, including [Copter Hack](https://www.youtube.com/watch?v=xgXheg3TTs4), WorldSkills Drone Operation competition, [Autonomous Vehicles Track of NTI Olympics 2016–2020](https://www.youtube.com/watch?v=E1_ehvJRKxg), Quadro Hack 2019 (National University of Science and Technology MISiS), Russian Robot Olympiad (autonomous flights), and others.
+`clover_blocks` is the blocks programming backend, implementing all the services and topics needed for running Blockly-generated Python script.
 
-## Raspberry Pi image
+### Services
 
-Preconfigured image for Raspberry Pi with installed and configured software, ready to fly, is available [in the Releases section](https://github.com/CopterExpress/clover/releases).
+* `~run` ([*clover_blocks/Run*](srv/Run.srv)) – run Blockly-generated program (in Python).
+* `~stop` ([*std_srvs/Trigger*](http://docs.ros.org/melodic/api/std_srvs/html/srv/Trigger.html)) – terminate the running program.
+* `~store` ([*clover_blocks/load*](srv/Store.srv)) – store a user program (to `<package_path>/programs` by default).
+* `~load` ([*clover_blocks/load*](srv/Load.srv)) – load all the stored programs.
 
-[![Build Status](https://travis-ci.org/CopterExpress/clover.svg?branch=master)](https://travis-ci.org/CopterExpress/clover)
+### Parameters
 
-Image features:
+* `~programs_dir` (*string*) – directory for user programs.
 
-* Raspbian Buster
-* [ROS Melodic](http://wiki.ros.org/melodic)
-* Configured networking
-* OpenCV
-* [`mavros`](http://wiki.ros.org/mavros)
-* Periphery drivers for ROS ([GPIO](https://clover.coex.tech/en/gpio.html), [LED strip](https://clover.coex.tech/en/leds.html), etc)
-* `aruco_pose` package for marker-assisted navigation
-* `clover` package for autonomous drone control
+Parameters read by frontend:
 
-API description for autonomous flights is available [on GitBook](https://clover.coex.tech/en/simple_offboard.html).
+* `~navigate_tolerance` (*float*) – distance tolerance in meters, used for navigate-like blocks (default: 0.2).
+* `~yaw_tolerance` (*float*) – yaw angle tolerance in degrees, used in set_yaw block (default: 20).
+* `~sleep_time` (*float*) – duration of sleep in loop cycles, used for navigate-like blocks (default: 0.2).
+* `~confirm_run` (*bool*) – enable confirmation to run the program (default: true).
 
-For manual package installation and running see [`clover` package documentation](clover/README.md).
+These parameters also can be set as URL GET-parameters, for example:
 
-## License
+```
+http://<hostname>/clover_blocks/?navigate_tolerance=0.5&sleep_time=0.1
+```
 
-While the Clover platform source code is available under the MIT License, note, that the [documentation](docs/) is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+### Topics
+
+#### Published
+
+* `~running` ([*std_msgs/Bool*](http://docs.ros.org/melodic/api/std_msgs/html/msg/Bool.html)) – indicates if the program is currently running.
+* `~block` ([*std_msgs/String*](http://docs.ros.org/melodic/api/std_msgs/html/msg/String.html)) – current executing block (maximum topic rate is limited).
+* `~error` ([*std_msgs/String*](http://docs.ros.org/melodic/api/std_msgs/html/msg/String.html)) – user program errors and exceptions.
+* `~prompt` ([*clover_blocks/Prompt*](msg/Prompt.msg)) – user input request (includes random request ID string).
+
+This topic is published from the frontend side:
+
+* `~prompt/<request_id>` ([*std_msgs/String*](http://docs.ros.org/melodic/api/std_msgs/html/msg/String.html)) – user input response.
