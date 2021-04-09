@@ -1,0 +1,12 @@
+Source: ros-melodic-clover-description
+Section: misc
+Priority: optional
+Maintainer: Alexey Rogachevskiy <sfalexrog@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), ros-melodic-catkin, ros-melodic-xacro
+Homepage: https://github.com/CopterExpress/clover
+Standards-Version: 3.9.2
+
+Package: ros-melodic-clover-description
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-melodic-gazebo-plugins, ros-melodic-gazebo-ros, ros-melodic-xacro
+Description: The clover_description package provides URDF models of the Clover series of quadcopters.
